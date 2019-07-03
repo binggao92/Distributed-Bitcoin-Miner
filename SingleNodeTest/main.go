@@ -5,8 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
-	"github.com/joho/godotenv"
 	"io"
 	"log"
 	"net/http"
@@ -15,6 +13,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/davecgh/go-spew/spew"
+	"github.com/joho/godotenv"
 
 	"github.com/gorilla/mux"
 )
@@ -50,6 +51,7 @@ type Block struct {
 	Difficulty int
 	Nonce      string
 }
+
 var BlockChain []Block
 
 type Message struct {
@@ -65,10 +67,10 @@ func run() error {
 	httpAddr := os.Getenv("ADDR")
 	log.Println("Listening on ", httpAddr)
 	s := &http.Server{
-		Addr: ":" + httpAddr,
-		Handler: mux,
-		ReadTimeout: 10* time.Second,
-		WriteTimeout: 10*time.Second,
+		Addr:           ":" + httpAddr,
+		Handler:        mux,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
 	if err := s.ListenAndServe(); err != nil {
@@ -92,26 +94,26 @@ func handleWriteBlock(writer http.ResponseWriter, request *http.Request) {
 	newBlock := generateBlock(BlockChain[len(BlockChain)-1], m.BPM)
 	mutex.Unlock()
 
-	if isBlockValid(newBlock, BlockChain[len(BlockChain) -1], m.BPM) {
+	if isBlockValid(newBlock, BlockChain[len(BlockChain)-1], m.BPM) {
 		BlockChain = append(BlockChain, newBlock)
 		spew.Dump(BlockChain)
 	}
 	respondWithJSON(writer, request, http.StatusCreated, newBlock)
 }
 
-func isBlockValid(newBlock , block Block, i int) bool{
-	if block.Index+1 != newBlock.Index || block.Hash != newBlock.PrevHash || calculateHash(newBlock) != newBlock.Hash{
+func isBlockValid(newBlock, block Block, i int) bool {
+	if block.Index+1 != newBlock.Index || block.Hash != newBlock.PrevHash || calculateHash(newBlock) != newBlock.Hash {
 		return false
 	}
 	return true
 }
 
-func isHashValid(hash string, difficulty int) bool{
+func isHashValid(hash string, difficulty int) bool {
 	prefix := strings.Repeat("0", difficulty)
 	return strings.HasPrefix(hash, prefix)
 }
 
-func calculateHash(block Block) string{
+func calculateHash(block Block) string {
 	record := strconv.Itoa(block.Index) + block.Timestamp + strconv.Itoa(block.BPM) + block.PrevHash + block.Nonce
 	h := sha256.New()
 	h.Write([]byte(record))
@@ -135,7 +137,7 @@ func generateBlock(oldBlock Block, BPM int) Block {
 func mine(block Block, i int) Block {
 	hex := fmt.Sprintf("%x", i)
 	block.Nonce = hex
-	if !isHashValid(calculateHash(block), block.Difficulty){
+	if !isHashValid(calculateHash(block), block.Difficulty) {
 		fmt.Printf(calculateHash(block), "calculating hash...")
 		block = mine(block, i+1)
 		time.Sleep(time.Second)
@@ -148,7 +150,7 @@ func mine(block Block, i int) Block {
 
 func handleGetBlockchain(writer http.ResponseWriter, r *http.Request) {
 	bytes, err := json.MarshalIndent(BlockChain, "", " ")
-	if err!= nil {
+	if err != nil {
 		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
