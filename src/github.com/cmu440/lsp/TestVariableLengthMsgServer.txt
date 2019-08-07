@@ -1,0 +1,12 @@
+Connects to server(addr is: 127.0.0.1:51081
+Send message to server, msg is: [Connect 0 0]
+receive msg from server, msg is: [Ack 1 0]
+=== TestVariableLengthMsgServer: server should handle variable length messages (1 clients, 1 msgs/client, 0% drop rate, 1 window size)
+Send message to server, msg is: [Data 1 1 868000]
+receive msg from server, msg is: [Ack 1 1]
+Send message to server, msg is: [Data 1 2 868000]
+receive msg from server, msg is: [Ack 1 2]
+Send message to server, msg is: [Data 1 3 868000]
+PASS
+Send message to server, msg is: [Data 1 3 868000]
+ok  	github.com/cmu440/lsp	2.012s
