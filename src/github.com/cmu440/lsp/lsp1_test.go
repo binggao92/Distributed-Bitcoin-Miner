@@ -123,6 +123,7 @@ func (ts *testSystem) randSleep() {
 // random delays, multiple clients, and large window sizes.
 func (ts *testSystem) runClient(clientID int, doneChan chan<- bool) {
 	defer ts.t.Log("Client shutting down...")
+	fmt.Println("Create Client", clientID)
 	cli := ts.clients[clientID]
 	connID := cli.ConnID()
 	for i := 0; i < ts.numMsgs; i++ {

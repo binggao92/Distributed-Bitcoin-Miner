@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -10,8 +11,17 @@ import (
 // Attempt to connect miner as a client to the server.
 func joinWithServer(hostport string) (lsp.Client, error) {
 	// TODO: implement this!
+	miner, err := lsp.NewClient(hostport, lsp.NewParams())
+	if err != nil {
+		return nil, err
+	}
 
-	return nil, nil
+	bytes, _ := json.Marshal(bitcoin.NewJoin())
+	err := miner.Write(bytes)
+	if err != nil {
+		return nil, err
+	}
+	return miner, nil
 }
 
 func main() {
@@ -31,4 +41,34 @@ func main() {
 	defer miner.Close()
 
 	// TODO: implement this!
+	for {
+		bytes, err := miner.Read()
+		if err != nil {
+			fmt.Println("Failed to read from server:", err)
+			return
+		}
+
+		task := &bitcoin.Message{}
+		if err := json.Unmarshal(bytes, task); err != nil {
+			fmt.Println("Unable to unmarshal response from server:", err)
+			return
+		}
+
+		minHash := 18446744073709551615 // set as largest uint64 value first
+
+		for n := task.Lower; n <= task.Upper; n++ {
+			hash := bitcoin.Hash(task.Data, n)
+			if hash < minHash {
+				minHash = hash
+				nonce := n
+			}
+		}
+		//send minhash and corresponding nonce back to server
+		response, _ := json.Marshal(bitcoin.NewResult(minHash, nonce))
+		err := miner.Write(response)
+		if err != nil {
+			fmt.Println("Failed to send result to server:", err)
+			return
+		}
+	}
 }

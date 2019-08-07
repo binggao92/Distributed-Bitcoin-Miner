@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strconv"
@@ -30,11 +31,25 @@ func main() {
 
 	defer client.Close()
 
-	_ = message  // Keep compiler happy. Please remove!
-	_ = maxNonce // Keep compiler happy. Please remove!
 	// TODO: implement this!
+	bytes, _ := json.Marshal(bitcoin.NewRequest(message, 0, maxNonce))
+	err := client.Write(bytes)
+	if err != nil {
+		fmt.Println("Failed to send request to server:", err)
+		return
+	}
 
-	printResult(0, 0)
+	response, err := client.Read()
+	if err != nil {
+		printDisconnected()
+	} else {
+		result := &bitcoin.Message{}
+		err := json.Unmarshal(response, result)
+		if err != nil {
+			fmt.Println("Unable to unmarshal response from server:", err)
+			return
+		}
+		printResult(result.Hash, result.Nonce)
 }
 
 // printResult prints the final result to stdout.
