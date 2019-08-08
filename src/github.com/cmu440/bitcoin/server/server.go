@@ -40,7 +40,7 @@ type idMsg struct {
 	msg *bitcoin.Message
 }
 
-const maxJobSize = 100
+const maxJobSize = 2000
 
 var LOGF *log.Logger
 
