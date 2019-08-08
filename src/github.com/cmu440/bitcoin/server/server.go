@@ -8,8 +8,18 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/cmu440/bitcoin"
 	"github.com/cmu440/lsp"
 )
+
+type server struct {
+	lspServer  lsp.Server
+	jobQueue   *list.List       // hold jobs from client
+	miners     map[int]*job     // record miners information
+	clients    map[int]*request // store the information about requests from clients
+	receiveMsg chan idMsg       // a channel to receive msg
+	connLost   chan int         // a channel to check connection lost
+}
 
 type job struct {
 	clientid int
@@ -18,21 +28,21 @@ type job struct {
 	maxNonce uint64
 }
 
-type server struct {
-	lspServer  lsp.Server
-	jobQueue   *list.List       // hold jobs from client
-	miners     map[int]*job     // record miners information
-	clients    map[int]*request // store the information about requests from clients
-	receiveMsg chan idMsg // a channel to receive msg
-	connLost   chan int         // a channel to check connection lost
-}
-
 //store the details about the request from client
 type request struct {
 	jobsRemain int
 	minHash    uint64
 	nonce      uint64
 }
+
+type idMsg struct {
+	id  int
+	msg *bitcoin.Message
+}
+
+const maxJobSize = 100
+
+var LOGF *log.Logger
 
 func startServer(port int) (*server, error) {
 	// TODO: implement this!
@@ -50,13 +60,6 @@ func startServer(port int) (*server, error) {
 	return srv, nil
 }
 
-type idMsg struct {
-	id  int
-	msg *bitcoin.Message
-}
-
-var LOGF *log.Logger
-
 func main() {
 	// You may need a logger for debug purpose
 	const (
@@ -73,6 +76,7 @@ func main() {
 
 	LOGF = log.New(file, "", log.Lshortfile|log.Lmicroseconds)
 	// Usage: LOGF.Println() or LOGF.Printf()
+	//LOGF.Println("Test Starts here")
 
 	const numArgs = 2
 	if len(os.Args) != numArgs {
@@ -99,6 +103,7 @@ func main() {
 	go srv.receiveMessage()
 
 	srv.handleMessage()
+	file.Close()
 }
 
 func (s *server) receiveMessage() {
@@ -117,7 +122,7 @@ func (s *server) receiveMessage() {
 	}
 }
 
-unc (s *server) handleMessage() {
+func (s *server) handleMessage() {
 	for {
 		select {
 		case idAndMsg := <-s.receiveMsg: //when receive msg
@@ -141,7 +146,8 @@ unc (s *server) handleMessage() {
 					// Client's job finished. send result back to client
 					if clientJob.jobsRemain == 0 {
 						s.sendMessage(clientId, bitcoin.NewResult(clientJob.minHash, clientJob.nonce))
-						s.lspServer.CloseConn(clientId)
+						//LOGF.Println("Job finished:", clientId, clientJob.minHash, clientJob.nonce)
+						s.lspServer.CloseConn(clientId) //close the link between client and server
 						delete(s.clients, clientId)
 					}
 				}

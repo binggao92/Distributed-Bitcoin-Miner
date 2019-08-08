@@ -5,7 +5,6 @@ package lsp
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/cmu440/lspnet"
@@ -91,7 +90,7 @@ func NewClient(hostport string, params *Params) (Client, error) {
 		return nil, err
 	}
 	c.conn = conn
-	fmt.Println("Connects to server(addr is:", serverAddr)
+	//fmt.Println("Connects to server(addr is:", serverAddr)
 	if err := c.sendData(NewConnect()); err != nil {
 		return nil, err
 	}
@@ -128,7 +127,7 @@ func (c *client) receiveData() {
 				continue
 			}
 			c.receiveMsg <- msg
-			fmt.Println("receive msg from server, msg is:", msg)
+			//fmt.Println("receive msg from server, msg is:", msg)
 		}
 	}
 }
@@ -242,7 +241,7 @@ func (c *client) handleEvents() {
 
 func (c *client) sendData(msg *Message) error {
 	bytes, _ := json.Marshal(msg)
-	fmt.Println("Send message to server, msg is:", msg)
+	//fmt.Println("Send message to server, msg is:", msg)
 	if _, err := c.conn.Write(bytes); err != nil {
 		return err
 	}

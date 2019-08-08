@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/cmu440/bitcoin"
 	"github.com/cmu440/lsp"
 )
 
@@ -17,8 +18,7 @@ func joinWithServer(hostport string) (lsp.Client, error) {
 	}
 
 	bytes, _ := json.Marshal(bitcoin.NewJoin())
-	err := miner.Write(bytes)
-	if err != nil {
+	if err := miner.Write(bytes); err != nil {
 		return nil, err
 	}
 	return miner, nil
@@ -54,19 +54,19 @@ func main() {
 			return
 		}
 
-		minHash := 18446744073709551615 // set as largest uint64 value first
-
+		var minHash uint64
+		minHash = 18446744073709551615 // set as largest uint64 value first
+		nonce := task.Lower
 		for n := task.Lower; n <= task.Upper; n++ {
 			hash := bitcoin.Hash(task.Data, n)
 			if hash < minHash {
 				minHash = hash
-				nonce := n
+				nonce = n
 			}
 		}
 		//send minhash and corresponding nonce back to server
 		response, _ := json.Marshal(bitcoin.NewResult(minHash, nonce))
-		err := miner.Write(response)
-		if err != nil {
+		if err := miner.Write(response); err != nil {
 			fmt.Println("Failed to send result to server:", err)
 			return
 		}

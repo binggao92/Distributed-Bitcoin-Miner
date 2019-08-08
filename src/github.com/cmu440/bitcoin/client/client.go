@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/cmu440/bitcoin"
 	"github.com/cmu440/lsp"
 )
 
@@ -33,8 +34,8 @@ func main() {
 
 	// TODO: implement this!
 	bytes, _ := json.Marshal(bitcoin.NewRequest(message, 0, maxNonce))
-	err := client.Write(bytes)
-	if err != nil {
+
+	if err := client.Write(bytes); err != nil {
 		fmt.Println("Failed to send request to server:", err)
 		return
 	}
@@ -50,6 +51,7 @@ func main() {
 			return
 		}
 		printResult(result.Hash, result.Nonce)
+	}
 }
 
 // printResult prints the final result to stdout.
