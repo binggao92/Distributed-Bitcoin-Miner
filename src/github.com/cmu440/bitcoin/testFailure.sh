@@ -6,13 +6,13 @@ $GOPATH/bin/miner localhost:6060 &
 $GOPATH/bin/miner localhost:6060 &
 ts=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 $GOPATH/bin/client localhost:6060 6073511289018497495 999999
-sleep 0.2
-#kill miner process
+sleep 0.1
+#kill all miners
 ps -ef | grep $GOPATH/bin/miner | grep -v grep | awk '{print $2}' | xargs kill
 #connect a new miner
 sleep 0.2
 $GOPATH/bin/miner localhost:6060
-sleep 1
+
 tt=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed=$((tt - ts))
 echo "Time taken: $elapsed milliseconds" > testFailure_time.txtsh
