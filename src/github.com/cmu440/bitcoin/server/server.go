@@ -76,7 +76,7 @@ func main() {
 
 	LOGF = log.New(file, "", log.Lshortfile|log.Lmicroseconds)
 	// Usage: LOGF.Println() or LOGF.Printf()
-	//LOGF.Println("Test Starts here")
+	LOGF.Println("Test Starts here")
 
 	const numArgs = 2
 	if len(os.Args) != numArgs {
@@ -146,7 +146,7 @@ func (s *server) handleMessage() {
 					// Client's job finished. send result back to client
 					if clientJob.jobsRemain == 0 {
 						s.sendMessage(clientId, bitcoin.NewResult(clientJob.minHash, clientJob.nonce))
-						//LOGF.Println("Job finished:", clientId, clientJob.minHash, clientJob.nonce)
+						LOGF.Println("Job finished:", clientId, clientJob.minHash, clientJob.nonce)
 						s.lspServer.CloseConn(clientId) //close the link between client and server
 						delete(s.clients, clientId)
 					}
@@ -196,6 +196,7 @@ func (s *server) addJob(id int, task *bitcoin.Message) {
 func (s *server) findIdleMiner() (int, bool) {
 	for minerId, job := range s.miners {
 		if job == nil {
+			LOGF.Println("A idle miner(Id is", minerId, ") starts working")
 			return minerId, true
 		}
 	}
